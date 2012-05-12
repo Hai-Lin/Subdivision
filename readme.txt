@@ -1,6 +1,6 @@
-Computational Aspects of Geometric Design hw2-----mesh
-Hai Lin ___uni: hl2656
-Purpose: implement a specialized triangle mesh structure for display in openGL, including multiple types of normal calculation and simplification via quadric error metrics 
+Computational Aspects of Geometric Design hw3-----impelement subdivision(Loop and Catmull-Clark)
+Hai Lin ___uni: hl26i56
+Purpose: implement subdivision surfaces of two types: both Loop and Catmull-Clark Subds for display in openGL.
 
 How to run:
 Type make to compile
