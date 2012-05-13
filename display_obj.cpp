@@ -63,9 +63,11 @@
 #include <sys/time.h>
 #include"Mesh.h"
 
-Mesh myMesh;
-
+vector<HMesh> myHMesh;   //vector of half edge 
+vector<Mesh> myMesh;     //vector of indexed triangle data structure
+int currentMesh=0;   //current Mesh index number
 int mode=1;  //display mode, default set to 1
+int type=0;  //type of subdivision 0 is index mesh--Loop subdivision, 1 is half edge--Catmull-Clark Subds
 
 
 //
@@ -617,6 +619,10 @@ void SpecialKeys(int key, int x, int y)
 		mode=4;
 	if(key=='5')
 		mode=5;
+	if(key=='<')
+		currentMesh--;
+	if(key=='>')
+		currentMesh++;
 	if(key == 'z') {
 		camPosZ += kTranslationStep;
 	}
@@ -747,8 +753,8 @@ int main(int argc, char **argv)
 	// screen, and you're done!
 	//
 
-	myMesh.loadFile(argv[1]);
-	setVertexNormal(myMesh);
+	myMesh[0].loadFile(argv[1]);
+	setVertexNormal(myMesh[0]);
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);

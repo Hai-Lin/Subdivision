@@ -1,315 +1,669 @@
-/*
- * =====================================================================================
- *
- *       Filename:  Mesh.cpp
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  04/20/2012 01:25:55
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  YOUR NAME (), 
- *   Organization:  
- *
- * =====================================================================================
- */
+#include <iostream>
+#include <fstream>
+#include <string.h>
+#include "Vector3D.h"
 #include "Mesh.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <sstream>
+#include <algorithm>
+
+using namespace std;
 
 void StringSplit(string str, string separator, vector<string>* results){
-	int found;
-	found = str.find_first_of(separator);
-	while(found != string::npos){
-		if(found > 0){
-			results->push_back(str.substr(0,found));
+    int found;
+    found = str.find_first_of(separator);
+    while(found != string::npos){
+        if(found > 0){
+            results->push_back(str.substr(0,found));
+        }
+        str = str.substr(found+1);
+        found = str.find_first_of(separator);
+    }
+    if(str.length() > 0){
+        results->push_back(str);
+    }
+}
+
+Material::Material() {
+	for (int i = 0; i < 3; i++) {
+		ka_ambient[i] = 0.2;
+		kd_diffuse[i] = 0.8;
+		ks_specular[i] = 1.0;
+		tf_transmission[i] = 1.0;
+		ke_emission[i] = 0.0;
+	}
+	d_Tr_alpha = 1.0;
+	Ns_shininess  = 0.0;
+	Ni_refelection = 1.0;
+	sharpness = 0.0;
+	density = 1.0;
+	illum = 2;
+	name.clear();
+	map_ka.clear();
+	map_kd.clear();
+	map_ks.clear();
+	map_ke.clear();
+	map_ns.clear();
+	map_d.clear();
+	map_bump.clear();
+}
+
+void Material::clear() {
+	for (int i = 0; i < 3; i++) {
+		ka_ambient[i] = 0.2;
+		kd_diffuse[i] = 0.8;
+		ks_specular[i] = 1.0;
+		tf_transmission[i] = 1.0;
+		ke_emission[i] = 0.0;
+	}
+	d_Tr_alpha = 1.0;
+	Ns_shininess  = 0.0;
+	Ni_refelection = 1.0;
+	sharpness = 0.0;
+	density = 1.0;
+	illum = 2;
+	name.clear();
+	map_ka.clear();
+	map_kd.clear();
+	map_ks.clear();
+	map_ke.clear();
+	map_ns.clear();
+	map_d.clear();
+	map_bump.clear();
+}
+
+
+
+Triangle::Triangle() {
+	edge_id = -1;
+	normal_id[0] = -1;
+	normal_id[1] = -1;
+	normal_id[2] = -1;
+	group.clear(); 
+	mat = -1;
+	
+}
+
+void Triangle::calFaceNormal(Vertex v1, Vertex v2, Vertex v3) {
+	Vector3D dir1 = v2.position - v1.position;
+	Vector3D dir2 = v3.position - v1.position;
+	Vector3D n = dir1 * dir2;
+	face_normal = normalize(n);
+}
+
+void Triangle::set_n(int n0, int n1, int n2, int _id) {
+	normal_id[0] = n0;
+	normal_id[1] = n1;
+	normal_id[2] = n2;
+	id = _id;
+}
+
+void Triangle::set_t(int t0, int t1, int t2, int _id) {
+	texture_id[0] = t0;
+	texture_id[1] = t1;
+	texture_id[2] = t2;
+	id = _id;
+}
+
+void Triangle::set_nt(int n0, int n1, int n2, int t0, int t1, int t2, int _id) {
+	normal_id[0] = n0;
+	normal_id[1] = n1;
+	normal_id[2] = n2;
+	texture_id[0] = t0;
+	texture_id[1] = t1;
+	texture_id[2] = t2;
+	id = _id;
+}
+
+
+Vertex::Vertex(Vector3D p, int _id) {
+	position = p;
+	id = _id;
+	has_normal = false;
+	edge_id = -1;
+}
+
+Texture::Texture(Vector2D t, int _id) {
+	texture = t;
+	id = _id;
+}
+
+Normal::Normal(Vector3D n, int _id) {
+	normal = n;
+	id = _id;
+}
+
+Mesh::Mesh() {
+	Material material;
+	mats.push_back(material);
+	m_nTriangle = 0;
+	m_nVertex = 0;
+	m_nNormal = 0;
+	m_nTexture = 0;
+	m_nEdge = 0;
+	m_nGroup = 0;
+	x_max = 0.0; x_min = 0.0;
+	y_max = 0.0; y_min = 0.0;
+	z_max = 0.0; z_min = 0.0;
+}
+
+void Mesh::EdgeOfVertex(int vid) {
+	for (int i = 0; i < m_nEdge; i++) {
+		if (edges[i].vertex_id == vid && !edges[i].multicase) {
+			cout << edges[edges[i].pair_id].vertex_id + 1 << " ";
 		}
-		str = str.substr(found+1);
-		found = str.find_first_of(separator);
 	}
-	if(str.length() > 0){
-		results->push_back(str);
-	}
+	cout << endl;
 }
 
-void Mesh::setFaceNormal()
-{
-	Vector3D edge1, edge2,normal;
-	for(unsigned int i=0; i<triangles.size();++i)
-	{
-		edge1=vertices[triangles[i].ver_id[1]].point-vertices[triangles[i].ver_id[0]].point;
-		edge2=vertices[triangles[i].ver_id[2]].point-vertices[triangles[i].ver_id[1]].point;
-		normal=edge1*edge2;
-		triangles[i].faceNormal=normalize(normal);
-		triangles[i].isNormal=true;
-		/*  
-			vertices[triangles[i].ver_id[0]].point.display();
-			vertices[triangles[i].ver_id[1]].point.display();
-			vertices[triangles[i].ver_id[2]].point.display();
-			edge1.display();
-			edge2.display();
-			normal.display();
-			*/
-
-	}
+void Mesh::EdgeOfFace(int tindex) {
+	int eid = triangles[tindex].edge_id;
+	int start_eid = eid;
+	do {
+		cout << edges[edges[eid].pair_id].vertex_id + 1 << " ";
+		eid = edges[eid].next_id;
+	} while (eid != start_eid);
+	cout << endl;
 }
-void Triangle::displayTriangle()
-{
 
-	cout<<"Triangle id: "<<id<<endl;
-	cout<<"Triangle vertices id: ";
-	for(int i=0; i<=2;++i)
-		cout<<i<<" : "<<ver_id[i]<<" ";
-	cout<<endl;
+void Mesh::FaceOfFace(int tindex) {
+	int eid = triangles[tindex].edge_id;
+	int start_eid = eid;
+	int pair = -1;
+	int tid = -1;
+	do {
+		pair = edges[eid].pair_id;
+		tid = edges[pair].triangle_id;
+		if (tid != -1)
+			cout << tid + 1 << " ";
+		eid = edges[eid].next_id;
+	} while (eid != start_eid);
+	cout << endl;
+}
 
-	if(isNbr)
-	{
-		cout<<"Triangle nerbighor's id are: "<<endl;
-		for(int i=0; i<=2;++i)
-		{
-			cout<<i<<" : "<<nbr_id[i]<<" ";
+void Mesh::setVNormal(int vid) {
+	bool has_normal = vertex[vid].has_normal;
+	if (has_normal) return;
+	Vector3D n;
+	for (int i = 0; i < m_nEdge; i = i + 2) {
+		if (edges[i].vertex_id == vid) {
+			int tid = edges[i].triangle_id;
+			if (tid != -1)
+				n = n + triangles[tid].face_normal;
 		}
-		cout<<endl;
 	}
-	else
-	{
-		cout<<"Triangle neibhor is not avaliable now"<<endl;
-	}
-
-	if(isNormal)
-	{
-		cout<<"Triangle's normal is:"<<endl;
-		faceNormal.display();
-	}
-	else
-	{
-		cout<<"Triangle's normal is not avaiable now"<<endl;
-	}
-	cout<<endl;
-
-
-
-
+	vertex[vid].normal = normalize(n);
+	vertex[vid].has_normal = true;
 }
-void Vertex::displayVertex()
-{
-	cout<<"Vertex id: "<<id<<endl;
-	cout<<"Vertex tri_id: "<<tri_id<<endl;
-	cout<<"Vertex point:";
-	point.display();
-	for(int i=0; i<=3;++i)
-	{
-		if(isNormal[i])
-		{
-			cout<<"Vertex's "<<i<<"'s normal is:"<<endl;
-			normal[i].display();
 
+
+void Mesh::setNormal() {
+	int eid, start_eid;
+	int vid;
+	for (int i = 0; i < m_nTriangle; i++) {
+		if (triangles[i].normal_id[0] == -1) {
+			start_eid = triangles[i].edge_id;
+			eid = start_eid;
+			do {
+				vid = edges[eid].vertex_id;
+				setVNormal(vid);
+				eid = edges[eid].next_id;
+			} while (eid != start_eid);
 		}
-		else
-			cout<<"Normal "<<i<<" is not avaiable"<<endl;
-
 	}
-
 }
 
-
-
-void Mesh::loadFile( char* fileName)
-{
-	ifstream input(fileName);
+int Mesh::loadFile(char *fname, int _mat) {
+	ifstream fin(fname);
+	assert(!fin.fail());
 	string line;
-	vector<string> temp;
-	if(input.is_open())
-	{
-		cout<<"file opens successfully"<<endl;
-
-
-		while(getline(input,line))
-		{
-			temp.clear();
-			StringSplit(line," ",&temp);
-			if(temp[0]=="#")
-				continue;
-			if(temp[0]=="v")
-			{
-				if(temp.size()==4)
-				{
-					Vertex tempVertex(atof(temp[1].c_str()),atof(temp[2].c_str()),atof(temp[3].c_str()),vertices.size());
-					vertices.push_back(tempVertex);
-				}
-				else
-				{
-					cout<<"file format error: v size"<<endl;
-				}
-
-			}
-			if(temp[0]=="f")
-			{
-				if(temp.size()==4)
-				{
-					Triangle tempTriangle(atoi(temp[1].c_str())-1,atoi(temp[2].c_str())-1,atoi(temp[3].c_str())-1,triangles.size());
-					for(int i=1; i<4;++i)
-						vertices[atoi(temp[i].c_str())-1].tri_id=triangles.size();
-					triangles.push_back(tempTriangle);
-				}
-				else
-				{
-					cout<<"file format error: face size"<<endl;
-				}
-
-			}
-
+	m_nVertex = 0;
+	m_nNormal = 0;
+	m_nTriangle = 0;
+	m_nTexture = 0;
+	m_nEdge = 0;
+	m_nGroup = 0;
+	float vdata[3];
+	float vtexture[2];
+	float vnormal[3];
+	vector<int> vindex;
+	vector<int> tindex;
+	vector<int> nindex;
+	bool texture_flag = false;
+	bool normal_flag = false;
+	int return_normal = 1;
+	vector<string> res;
+	vector<string> face_para_test;
+	vector<string> face_para;
+	string sep1 = " ";
+	string sep2 = "/";
+	string sep3 = "//";
+	int temp_para;
+	int res_size;
+	string group = "default";
+	int mat = 0;
+	int first = 1;
+	while (getline(fin, line)) {
+		res.clear();
+		texture_flag = false;
+		normal_flag = false;
+		StringSplit(line, sep1, &res);
+		if (res.size() == 0)
+			continue;
+		res_size = res.size();
+		while (!res[res_size - 1].compare("\r")) {
+			res.pop_back();
+			res_size--;
 		}
-		cout<<"succefully load "<<vertices.size()<<" vertices and "<<triangles.size()<<" triangles"<<endl;
-	}
-	else
-	{
-		cout<<"file open error"<<endl;
-	}
-}
-float Mesh::area(int i)
-{
-	Vector3D edge1, edge2, cross;
-	edge1=vertices[triangles[i].ver_id[1]].point-vertices[triangles[i].ver_id[0]].point;
-	edge2=vertices[triangles[i].ver_id[2]].point-vertices[triangles[i].ver_id[0]].point;
-	cross=edge1*edge2;
-	return 0.5*cross.Length();
-}
-void Mesh::displayMesh()
-{
-	cout<<"This is vertics:"<<endl;
-	for(unsigned int i =0; i<vertices.size(); ++i)
-		vertices[i].displayVertex();
-	cout<<"This is trangles:"<<endl;
-	for(unsigned int i=0; i<triangles.size();++i)
-		triangles[i].displayTriangle();
-
-}
-
-void Mesh::findNeighbor()
-{
-	for(unsigned int i=0; i<triangles.size();++i)
-	{
-		for(unsigned int k=0; k<triangles.size();++k)
-		{
-			for(unsigned int j=0; j<3;++j)
-				for(unsigned int l=0; l<3;++l)
-				{
-					if(!triangles[i].nbrFound[j])
-					{
-						if(triangles[i].ver_id[j]==triangles[k].ver_id[l] && triangles[i].ver_id[(j+1)%3]==triangles[k].ver_id[(l+2)%3])
-						{
-							triangles[i].nbr_id[j]=k;
-							triangles[i].nbrFound[j]=true;
-							triangles[k].nbr_id[(l+2)%3]=i;
-							triangles[k].nbrFound[(l+2)%3]=true;
-							
+		if (res.size() == 0)
+			continue;
+		if (!res[0].compare("v")) {
+			for (int i = 1; i < res.size(); i++) {
+				vdata[i - 1] = atof(res[i].c_str());
+			}
+			if (first) {
+				x_max = vdata[0]; x_min = vdata[0];
+				y_max = vdata[1]; y_min = vdata[1];
+				z_max = vdata[2]; z_min = vdata[2];
+				first = 0;
+			}
+			else {
+				if (vdata[0] > x_max) x_max = vdata[0];
+				if (vdata[0] < x_min) x_min = vdata[0];
+				if (vdata[1] > y_max) y_max = vdata[1];
+				if (vdata[1] < y_min) y_min = vdata[1];
+				if (vdata[2] > z_max) z_max = vdata[2];
+				if (vdata[2] < z_min) z_min = vdata[2];
+			}
+			Vertex tempv = Vertex(Vector3D(vdata[0], vdata[1], vdata[2]), m_nVertex);
+			m_nVertex++;
+			vertex.push_back(tempv);
+		}
+		else if (!res[0].compare("vt")) {
+			for (int i = 1; i < res.size(); i++) {
+				vtexture[i - 1] = atof(res[i].c_str());
+			}
+			Texture tempt = Texture(Vector2D(vtexture[0], vtexture[1]), m_nTexture);
+			m_nTexture++;
+			textures.push_back(tempt);
+		}
+		else if (!res[0].compare("vn")) {
+			for (int i = 1; i < res.size(); i++) {
+				vnormal[i - 1] = atof(res[i].c_str());
+			}
+			Normal tempn = Normal(Vector3D(vnormal[0], vnormal[1], vnormal[2]), m_nNormal);
+			m_nNormal++;
+			normals.push_back(tempn);
+		}
+		else if (!res[0].compare("f")) {
+			vindex.clear();
+			tindex.clear();
+			nindex.clear();
+			for (int i = 1; i < res.size(); i++) {
+				face_para.clear();
+				StringSplit(res[i], sep2, &face_para);
+				if (face_para.size() == 1) {
+					if (face_para[0].length() > 0) {
+						int ind = atoi(face_para[0].c_str()) - 1;
+						vindex.push_back(ind);
+					}
+					return_normal = 0;
+				}
+				else if (face_para.size() == 2) {
+					face_para_test.clear();
+					StringSplit(res[i], sep3, &face_para_test);
+					int size_test = face_para_test.size();
+					if (size_test == 2) {
+						if (face_para[0].length() > 0) {
+							int ind = atoi(face_para[0].c_str()) - 1;
+							vindex.push_back(ind);
+						}
+						if (face_para[1].length() > 0) {
+							int ind = atoi(face_para[1].c_str()) - 1;
+							nindex.push_back(ind);
+							normal_flag = true;
+						}
+					}
+					else if (size_test == 1) {
+						return_normal = 0;
+						if (face_para[0].length() > 0) {
+							int ind = atoi(face_para[0].c_str()) - 1;
+							vindex.push_back(ind);
+						}
+						if (face_para[1].length() > 0) {
+							int ind = atoi(face_para[1].c_str()) - 1;
+							tindex.push_back(ind);
+							texture_flag = true;
 						}
 					}
 				}
-		}
-		for(unsigned int z=0; z<3;++z)
-		{
-			if(!triangles[i].nbrFound[z])
-				triangles[i].nbr_id[z]=-1;
-		}
-		triangles[i].isNbr=true;
-		//		cout<<"triangles "<<i<<" found its neighbors"<<endl;
-	}
-}
-vector<int> Mesh::faceOfVertex(int vertex)
-{
-	int position,tri_index;
-	vector<int> result;
-	Triangle t=triangles[vertices[vertex].tri_id];
-	do{
-		for(unsigned int i=0; i<3;++i)
-		{	
-			if(t.ver_id[i]==vertex)
-			{
-				position=i;
+				else if (face_para.size() == 3) {
+					if (face_para[0].length() > 0) {
+						int ind = atoi(face_para[0].c_str()) - 1;
+						vindex.push_back(ind);
+					}
+					if (face_para[1].length() > 0) {
+						int ind = atoi(face_para[1].c_str()) - 1;
+						tindex.push_back(ind);
+						texture_flag = true;
+					}
+					if (face_para[2].length() > 0) {
+						int ind = atoi(face_para[2].c_str()) - 1;
+						nindex.push_back(ind);
+						normal_flag = true;
+					}
+				}
+			}
+			int face_size = vindex.size();
+			if (face_size > 0) {
+				for (int i = 1; i < face_size - 1; i++) {
+					
+					Triangle temptt;
+					int tid = m_nTriangle;
+					if (texture_flag && normal_flag) {
+						temptt.set_nt(nindex[i], nindex[i + 1], nindex[0], tindex[i], tindex[i + 1], tindex[0], m_nTriangle++);
+					}
+					else if (normal_flag) {
+						temptt.set_n(nindex[i], nindex[i + 1], nindex[0], m_nTriangle++);
+					}
+					else if (texture_flag) {
+						temptt.set_t(tindex[i], tindex[i + 1], tindex[0], m_nTriangle++);
+					}
+					else {
+						m_nTriangle++;
+					}
+					
+					if (_mat) {
+						temptt.mat = mat;
+					}
+					else {
+						temptt.mat = 0;
+					}
+					
+					temptt.calFaceNormal(vertex[vindex[0]], vertex[vindex[i]], vertex[vindex[i + 1]]);
+					
+					addToGroup(tid, group);
+					
+					
+					bool v01_flag = false;
+					bool v20_flag = false;
+					bool v12_flag = false;
+					bool v01_mul = false;
+					bool v20_mul = false;
+					bool v12_mul = false;
+					int iv0 = vindex[0];
+					int iv1 = vindex[i];
+					int iv2 = vindex[i + 1];
+					int i01 = -1;
+					int i12 = -1;
+					int i20 = -1;
+					
+					for (int j = 0; j < m_nEdge; j++) {
+						if (edges[j].vertex_id == iv1  && edges[edges[j].pair_id].vertex_id == iv0 && edges[j].next_id == -1) {
+							v01_flag = true;
+							i01 = j;
+						}
+						if (edges[j].vertex_id == iv1  && edges[edges[j].pair_id].vertex_id == iv0 && edges[j].next_id != -1) {
+							v01_mul = true;
+							//i01 = j;
+						}
+						if (edges[j].vertex_id == iv2  && edges[edges[j].pair_id].vertex_id == iv1 && edges[j].next_id == -1) {
+							v12_flag = true;
+							i12 = j;
+						}
+						if (edges[j].vertex_id == iv2  && edges[edges[j].pair_id].vertex_id == iv1 && edges[j].next_id != -1) {
+							v12_mul = true;
+							//i12 = j;
+						}
+						if (edges[j].vertex_id == iv0  && edges[edges[j].pair_id].vertex_id == iv2 && edges[j].next_id == -1) {
+							v20_flag = true;
+							i20 = j;
+						}
+						if (edges[j].vertex_id == iv0  && edges[edges[j].pair_id].vertex_id == iv2 && edges[j].next_id != -1) {
+							v20_mul = true;
+							//i20 = j;
+						}
+					}
+									
+					if (v01_flag) {
+						edges[i01].triangle_id = tid;
+						temptt.edge_id = i01;
+						if (v12_flag) edges[i01].next_id = i12;
+						else edges[i01].next_id = m_nEdge;
+					}
+					else {
+						Edge e1, e2;
+						e1.vertex_id = iv1;
+						e2.vertex_id = iv0;
+						e1.id = m_nEdge;
+						e2.pair_id = m_nEdge;
+						m_nEdge++;
+						e2.id = m_nEdge;
+						e1.pair_id = m_nEdge;
+						m_nEdge++;
+						e1.triangle_id = tid;
+						e2.triangle_id = -1;
+						temptt.edge_id = e1.id;
+						if (v12_flag) e1.next_id = i12;
+						else e1.next_id = m_nEdge;
+						e2.next_id = -1;
+						e1.multicase = v01_mul;
+						e2.multicase = v01_mul;
+						edges.push_back(e1);
+						edges.push_back(e2);
+						i01 = e1.id;
+						if (vertex[iv0].edge_id == -1) vertex[iv0].edge_id = e1.id;
+					}
+
+					if (v12_flag) {
+						edges[i12].triangle_id = tid;
+						if (v20_flag) edges[i12].next_id = i20;
+						else edges[i12].next_id = m_nEdge;
+					}
+					else {
+						Edge e1, e2;
+						e1.vertex_id = iv2;
+						e2.vertex_id = iv1;
+						e1.id = m_nEdge;
+						e2.pair_id = m_nEdge;
+						m_nEdge++;
+						e2.id = m_nEdge;
+						e1.pair_id = m_nEdge;
+						m_nEdge++;
+						e1.triangle_id = tid;
+						e2.triangle_id = -1;
+						if (v20_flag) e1.next_id = i20;
+						else e1.next_id = m_nEdge;
+						e2.next_id = -1;
+						e1.multicase = v12_mul;
+						e2.multicase = v12_mul;
+						edges.push_back(e1);
+						edges.push_back(e2);
+						if (vertex[iv1].edge_id == -1) vertex[iv1].edge_id = e1.id;
+					}
+
+					if (v20_flag) {
+						edges[i20].triangle_id = tid;
+						edges[i20].next_id = i01;
+					}
+					else {
+						Edge e1, e2;
+						e1.vertex_id = iv0;
+						e2.vertex_id = iv2;
+						e1.id = m_nEdge;
+						e2.pair_id = m_nEdge;
+						m_nEdge++;
+						e2.id = m_nEdge;
+						e1.pair_id = m_nEdge;
+						m_nEdge++;
+						e1.triangle_id = tid;
+						e2.triangle_id = -1;
+						e1.next_id = i01;
+						e2.next_id = -1;
+						e1.multicase = v20_mul;
+						e2.multicase = v20_mul;
+						edges.push_back(e1);
+						edges.push_back(e2);
+						if (vertex[iv2].edge_id == -1) vertex[iv2].edge_id = e1.id;
+					}			
+
+					triangles.push_back(temptt);
+				}	
 			}
 		}
-		tri_index=t.nbr_id[(position+2)%3];
-		result.push_back(tri_index);
-		if(degree(t.faceNormal, triangles[tri_index].faceNormal)>60)
-			vertices[vertex].isSharp=true;
-		t=triangles[t.nbr_id[(position+2)%3]];
-	} while (t.id!=vertices[vertex].tri_id);
-	return result;
-}
-void setVertexNormal( Mesh & mesh)
-{
-	mesh.setFaceNormal();
-	mesh.findNeighbor();
-	vector<int> neighbor;
-	float totalArea;
-	for(unsigned int i=0; i<mesh.vertices.size();++i)
-	{
-		//get neighbor face
-		neighbor.clear();
-		neighbor=mesh.faceOfVertex(i);
-		totalArea=0;
-		bool isFlat=false;
-		Vector3D temp1, temp2, temp3;
-		for(unsigned int j=0;j<neighbor.size();++j)
-		{
-			if(mesh.triangles[neighbor[j]].isFlat)
-				isFlat=true;
-			//get total Area
-			totalArea+=mesh.area(neighbor[j]);
-			//set normal 1
-			temp1=temp1+mesh.triangles[neighbor[j]].faceNormal;
-			//set normal 3
-			for(int k=0; k<3;++k)
-			{
-				if(mesh.triangles[neighbor[j]].ver_id[k]==i)
-				{
-					Vector3D edge1=mesh.vertices[mesh.triangles[neighbor[j]].ver_id[(k+1)%3]].point-mesh.vertices[i].point;
-					Vector3D edge2=mesh.vertices[mesh.triangles[neighbor[j]].ver_id[(k+2)%3]].point-mesh.vertices[i].point;
-					float weight=degree(edge1,edge2)/180;
-					temp3=temp3+weight*mesh.triangles[neighbor[j]].faceNormal;
+		else if (!res[0].compare("g") && _mat) {
+			if (res.size() > 1) {
+				group.clear();
+				group.assign(res[1]);
+			}
+		}
+		else if (!res[0].compare("usemtl") && _mat) {
+			int size_mat = mats.size();
+			int length = res[1].length();
+			string mat_name;
+			mat_name.assign(res[1]);
+			for (int i = 1; i < size_mat; i++) {
+				if (!mat_name.compare(mats[i].name)) {
+					mat = i;
+					break;
 				}
 			}
 		}
-		for(unsigned int k=0;k<neighbor.size();++k)
-		{
-			if(mesh.vertices[i].isSharp)
-			mesh.triangles[neighbor[k]].isFlat=true;
-			//set normal2
-			float weight=mesh.area(neighbor[k])/totalArea;
-			temp2=temp2+weight*mesh.triangles[neighbor[k]].faceNormal;
+		else {
+			continue;
 		}
-		mesh.vertices[i].normal[0]=normalize(temp1);
-		mesh.vertices[i].normal[1]=normalize(temp2);
-		mesh.vertices[i].normal[2]=normalize(temp3);
-		mesh.vertices[i].isNormal[0]=true;
-		mesh.vertices[i].isNormal[1]=true;
-		mesh.vertices[i].isNormal[2]=true;
-
 	}
-
-
-
+	fin.close();
+	m_nGroup = groups.size();
+	return return_normal;
 }
 
 
-/*  
-int main(int argc, char* argv[])
-{
-	if(argc!=2)
-	{
-		cout<<"invalid input!"<<endl;
-		return -1;
+
+/*Not fully supported now, only support Ka, Kd, Ks, Ke, Ns, d, Tr*/
+void Mesh::loadMat(char* mtlfname) {
+	ifstream fin(mtlfname);
+	assert(!fin.fail());
+	string line;
+	vector<string> res;
+	int res_size;
+	string sep1 = " ";
+	Material newmat;
+	int current_mat_count = 1;
+	while (getline(fin, line)) {
+		res.clear();
+		StringSplit(line, sep1, &res);
+		if (res.size() == 0)
+			continue;
+		res_size = res.size();
+		while (!res[res_size - 1].compare("\r")) {
+			res.pop_back();
+			res_size--;
+		}
+		if (res.size() == 0)
+			continue;
+		if (!res[0].compare("newmtl")) {
+			if (current_mat_count != 1) {
+				mats.push_back(newmat);
+			}
+			current_mat_count++;
+			newmat.clear();
+			newmat.name.assign(res[1]);
+		}
+		else if (!res[0].compare("Ka")) {
+			for (int i = 1; i < res.size(); i++) {
+				newmat.ka_ambient[i - 1] = atof(res[i].c_str());
+			}
+		}
+		else if (!res[0].compare("Kd")) {
+			for (int i = 1; i < res.size(); i++) {
+				newmat.kd_diffuse[i - 1] = atof(res[i].c_str());
+			}
+			
+		}
+		else if (!res[0].compare("Ks")) {
+			for (int i = 1; i < res.size(); i++) {
+				newmat.ks_specular[i - 1] = atof(res[i].c_str());
+			}
+		}
+		else if (!res[0].compare("Ke")) {
+			for (int i = 1; i < res.size(); i++) {
+				newmat.ke_emission[i - 1] = atof(res[i].c_str());
+			}
+		}
+		else if (!res[0].compare("Tf")) {
+			for (int i = 1; i < res.size(); i++) {
+				newmat.tf_transmission[i - 1] = atof(res[i].c_str());
+			}
+			if (res.size() < 4) {
+				newmat.tf_transmission[1] = newmat.tf_transmission[0];
+				newmat.tf_transmission[2] = newmat.tf_transmission[0]; 
+			}
+			
+		}
+		else if (!res[0].compare("d")) {
+			newmat.d_Tr_alpha = atof(res[1].c_str());
+			
+		}
+		else if (!res[0].compare("Tr")) {
+			newmat.d_Tr_alpha = atof(res[1].c_str());
+		}
+		else if (!res[0].compare("Ns")) {
+			newmat.Ns_shininess = atof(res[1].c_str()) / 1000.0 * 128.0;
+		}
+		else if (!res[0].compare("Ni")) {
+			newmat.Ni_refelection = atof(res[1].c_str());
+		}
+		else if (!res[0].compare("illum")) {
+			newmat.illum = atoi(res[1].c_str());
+		}
+		
 	}
-
-	Mesh myMesh;
-	myMesh.loadFile(argv[1]);
-	setVertexNormal(myMesh);
-	myMesh.displayMesh();
-
-	return 0;
+	if (current_mat_count != 1)
+		mats.push_back(newmat);
+	fin.close();
 }
 
+/*Not supported yet*/
+void Mesh::setMatIllum() {
+	for (int i = 0; i < mats.size(); i++) {
+		switch (mats[i].illum) {
+			case 0:
+			break;
+			case 1:
+			break;
+			case 2:
+			break;
+			case 3:
+			break;
+			case 4:
+			break;
+			case 5:
+			break;
+			case 6:
+			break;
+			case 7:
+			break;
+			case 8:
+			break;
+			case 9:
+			break;
+			case 10:
+			break;
+		}
+	}
+}
 
-*/
+void Mesh::addToGroup(int tid, string gname) {
+	for (int i = 0; i < groups.size(); i++) {
+		if (!gname.compare(groups[i].g_name)) {
+			groups[i].tids.push_back(tid);
+			return;
+		}
+	}
+	FaceGroup fg;
+	fg.g_name.assign(gname);
+	fg.tids.push_back(tid);
+	groups.push_back(fg);
+}
