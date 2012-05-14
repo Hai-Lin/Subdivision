@@ -694,9 +694,13 @@ int main(int argc, char **argv)
 
 	Mesh mesh1;
 	mesh1.loadFile(argv[1]);
+	
 	myMesh.push_back(mesh1);
 	setVertexNormal(myMesh[0]);
-	//myMesh[0].displayMesh();
+	myMesh[0]=getLoopSub(myMesh[0]);
+	setVertexNormal(myMesh[0]);
+	
+	
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);

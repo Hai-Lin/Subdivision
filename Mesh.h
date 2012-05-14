@@ -94,6 +94,11 @@ class Mesh
 		vector<int> edgesOfVertex(int vertex);
 		vector<int> edgesOfFace(int face);
 };
+
+Vertex getLoopEdgeVertex(Mesh , int edge_id);
+vector<Vertex> getLoopVertices(Mesh);  //get vertecis of next level Loop subdivisoin
 void setPairEdge(Mesh &);
 void setVertexNormal(Mesh &);
 void StringSplit(string str, string separator, vector<string>* results);
+Mesh getLoopSub(Mesh );   //get the next level of Loop subdivision
+Mesh getCCSub(Mesh );  //get next level of cc subdivision
