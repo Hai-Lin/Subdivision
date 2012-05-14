@@ -300,7 +300,6 @@ void setVertexNormal( Mesh & mesh)
 		//get neighbor face
 		neighbor.clear();
 		neighbor=mesh.edgesOfVertex(i);
-		cout<<"i is "<<i<<endl;
 		Vector3D temp;
 		for(unsigned int j=0;j<neighbor.size();++j)
 		{
@@ -314,7 +313,7 @@ void setVertexNormal( Mesh & mesh)
 				Vector3D edge1=mesh.vertices[mesh.edges[neighbor[j]].vertex_id].point-mesh.vertices[mesh.edges[mesh.edges[neighbor[j]].pair_id].vertex_id].point;
 				Vector3D edge2=mesh.vertices[mesh.edges[neighbor[k]].vertex_id].point-mesh.vertices[mesh.edges[mesh.edges[neighbor[k]].pair_id].vertex_id].point;
 				float weight=degree(edge1,edge2)/360;
-				temp=temp+mesh.faces[mesh.edges[k].face_id].faceNormal;
+				temp=temp+weight*mesh.faces[mesh.edges[neighbor[j]].face_id].faceNormal;
 			}
 		}
 		mesh.vertices[i].normal=normalize(temp);

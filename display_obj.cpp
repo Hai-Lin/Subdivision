@@ -65,7 +65,7 @@
 
 vector<Mesh> myMesh;     //vector of indexed triangle data structure
 int currentMesh=0;   //current Mesh index number
-
+int mode=0;  //normal mode, 0 is flat, 1 is smooth
 
 //
 // The next 2 functions are just for (rough) timing of how many
@@ -369,16 +369,34 @@ void displayMesh()
 {
 	Mesh mesh;
 	mesh=myMesh[currentMesh];
+	switch (mode)
+	{
+		case 0:
+	for(unsigned int i=0; i<mesh.faces.size(); ++i)
+	{
+				glBegin(GL_POLYGON);
+			glNormal3f(mesh.faces[i].faceNormal.x,mesh.faces[i].faceNormal.y,mesh.faces[i].faceNormal.z);
+				for(unsigned int j=0; j<mesh.faces[i].ver_id.size();++j)
+				{
+				glVertex3f(mesh.vertices[mesh.faces[i].ver_id[j]].point.x,mesh.vertices[mesh.faces[i].ver_id[j]].point.y,mesh.vertices[mesh.faces[i].ver_id[j]].point.z);
+				}
+				glEnd();
+	}
+	break;
+		case 1:
 	for(unsigned int i=0; i<mesh.faces.size(); ++i)
 	{
 				glBegin(GL_POLYGON);
 				for(unsigned int j=0; j<mesh.faces[i].ver_id.size();++j)
 				{
-				glNormal3f(mesh.vertices[mesh.faces[i].ver_id[j]].normal.x,mesh.vertices[mesh.faces[i].ver_id[j]].normal.y,mesh.vertices[mesh.faces[i].ver_id[j]].normal.z);
+			glNormal3f(mesh.vertices[mesh.faces[i].ver_id[j]].normal.x,mesh.vertices[mesh.faces[i].ver_id[j]].normal.y,mesh.vertices[mesh.faces[i].ver_id[j]].normal.z);
 				glVertex3f(mesh.vertices[mesh.faces[i].ver_id[j]].point.x,mesh.vertices[mesh.faces[i].ver_id[j]].point.y,mesh.vertices[mesh.faces[i].ver_id[j]].point.z);
 				}
 				glEnd();
 	}
+
+	}
+	
 
 }
 
@@ -536,6 +554,10 @@ void SpecialKeys(int key, int x, int y)
 	if(key == GLUT_KEY_RIGHT) {
 		camRotY -= kRotationStep;
 	}
+	if(key=='1')
+		mode=0;
+	if(key=='2')
+		mode=1;
 	if(key=='<')
 		currentMesh--;
 	if(key=='>')
