@@ -1,103 +1,99 @@
-#ifndef _MESH_H_
-#define _MESH_H_
+/*
+ * =====================================================================================
+ *
+ *       Filename:  Mesh.h
+ *
+ *    Description:  Half Edge structure Mesh
+ *
+ *        Version:  1.0
+ *        Created:  05/10/2012 19:41:35
+ *       Revision:  none
+ *       Compiler:  g++
+ *
+ *         Author:  Hai Lin, 
+ *   Organization:  Columbia
+ *
+ * =====================================================================================
+ */
 
-#include <vector>
-#include "Vector3D.h"
-#include "Vector2D.h"
-#include <algorithm>
-#include <string>
-
+#include<fstream>
+#include<iostream>
+#include<string>
+#include<vector>
+#include"Vector3D.h"
+#include<algorithm>
 using namespace std;
 
 class Edge;
 class Vertex;
-class Triangle;
-class Normal;
+class Face;
+class Mesh;
 
-class Vertex {
-public:
-	Vector3D position;
-	Vector3D normal;
-	bool has_normal;
-	int id;
-	int edge_id;
-	Vertex(Vector3D p, int _id);
-	
-	~Vertex(){}
+class Edge
+{
+	public:
+		int id, pair_id, next_id, vertex_id, face_id;
+		Edge(int _id=-1,  int vertex=-1, int face=-1, int pair=-1 )
+		{
+			id=_id;
+			vertex_id=vertex;
+			face_id=face;
+			pair_id=pair;
+		}
+		void displayEdge();
+		~Edge() {}
 };
 
-class Normal {
-public:
-	Vector3D normal;
-	int id;
-	Normal(Vector3D n, int _id);
-	~Normal(){}
+class Face{
+	public:
+		vector<int> ver_id;
+		int id, edge_id;
+		Edge faceEdge; //andy incident h-edge
+		Vector3D faceNormal;
+		bool isNormal;
+		Face( int d=0)
+		{
+			id=d;
+		}
+		void displayFace();
 };
 
-class Triangle {
-public:
-	int edge_id;
-	int normal_id[3];
-	int texture_id[3];
-	int id;
-	string group;
-	int mat;
-	Vector3D face_normal;
-	Triangle();
-	void set_n(int n0, int n1, int n2, int _id);
-	void set_t(int t0, int t1, int t2, int _id);
-	void set_nt(int n0, int n1, int n2, int t0, int t1, int t2, int _id);
-	void calFaceNormal(Vertex v1, Vertex v2, Vertex v3);
-	~Triangle() {}
+class Vertex
+{
+	public:
+		Vector3D point;
+		Vector3D normal; 
+		// normal3 is average of adjacent trangles, each weighted by angle of incident triangle edges
+		int id, edge_id; // id of half edge
+		bool isNormal, isBoundary;
+		Vertex(float x=0.0, float y=0.0, float z=0.0, int _id=0, int edge=-1)
+		{
+			id=_id;
+			edge_id=edge;
+			Vector3D xx(x,y,z);
+			point=xx;
+			isNormal=false;
+			isBoundary=false;
+		}
+		void displayVertex();
+
 };
 
-class Edge {
-public:
-	int pair_id;
-	int next_id;
-	int id;
-	int vertex_id;
-	int triangle_id;
-	int multicase;
-	Edge() {}
-	~Edge() {}
+class Mesh
+{
+	public:
+		vector<Face> faces;
+		vector<Vertex> vertices;
+		vector<Edge> edges;
+		int type;  // 0 is Loop subdivision, 1 is 
+		Mesh() {}
+		void loadFile(char *fname);
+		void displayMesh();
+		void setFaceNormal();
+		int previousEdge(int edge);
+		vector<int> edgesOfVertex(int vertex);
+		vector<int> edgesOfFace(int face);
 };
-
-class Mesh {
-public:
-	int m_nTriangle;
-	int m_nVertex;
-	int m_nNormal;
-	int m_nTexture;
-	int m_nEdge;
-	int m_nGroup;
-	float x_max;
-	float x_min;
-	float y_max;
-	float y_min;
-	float z_max;
-	float z_min;
-	vector<Triangle> triangles;
-	vector<Vertex> vertex;
-	vector<Normal> normals;
-	vector<Texture> textures;
-	vector<Edge> edges;
-	vector<Material> mats;
-	vector<FaceGroup> groups;
-	void draw();
-	Mesh();
-	void loadMat(char *mtlfname);
-	void setMatIllum();
-	//int loadFile(char *fname, int query = 0, int _mat = 0);
-	int loadFile(char *fname, int _mat = 0);
-	void setNormal();
-	void EdgeOfFace(int tindex);
-	void FaceOfFace(int tindex);
-	void EdgeOfVertex(int vid);
-	void setVNormal(int vid);
-	//void mergeGroup();
-	void addToGroup(int tid, string gname);
-	~Mesh(){}
-};
-
-#endif
+void setPairEdge(Mesh &);
+void setVertexNormal(Mesh &);
+void StringSplit(string str, string separator, vector<string>* results);

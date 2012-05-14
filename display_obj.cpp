@@ -63,11 +63,8 @@
 #include <sys/time.h>
 #include"Mesh.h"
 
-vector<HMesh> myHMesh;   //vector of half edge 
 vector<Mesh> myMesh;     //vector of indexed triangle data structure
 int currentMesh=0;   //current Mesh index number
-int mode=1;  //display mode, default set to 1
-int type=0;  //type of subdivision 0 is index mesh--Loop subdivision, 1 is half edge--Catmull-Clark Subds
 
 
 //
@@ -370,89 +367,19 @@ void DrawCurvesSurfaces(void)
 
 void displayMesh()
 {
-	switch(mode){
-		case 1:   //flat normal
-			for(unsigned int i=0; i<myMesh.triangles.size();++i)
-			{	
-				glBegin(GL_TRIANGLES);
-				glNormal3f(myMesh.triangles[i].faceNormal.x,myMesh.triangles[i].faceNormal.y,myMesh.triangles[i].faceNormal.z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.z);
-				glEnd();
-			}
-			break;
-		case 2:   //average normal
-			for(unsigned int i=0; i<myMesh.triangles.size();++i)
-			{
-				glBegin(GL_TRIANGLES);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[0].x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[0].y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[0].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.z);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[0].x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[0].y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[0].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.z);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[0].x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[0].y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[0].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.z);
-				glEnd();
-
-
-			}
-			break;
-		case 3:   //average normal
-			for(unsigned int i=0; i<myMesh.triangles.size();++i)
-			{
-				glBegin(GL_TRIANGLES);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[1].x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[1].y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[1].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.z);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[1].x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[1].y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[1].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.z);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[1].x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[1].y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[1].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.z);
-				glEnd();
-
-
-			}
-			break;
-		case 4:   //average normal
-			for(unsigned int i=0; i<myMesh.triangles.size();++i)
-			{
-				glBegin(GL_TRIANGLES);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[2].x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[2].y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[2].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.z);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[2].x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[2].y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[2].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.z);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[2].x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[2].y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[2].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.z);
-				glEnd();
-			}
-			break;
-		case 5:  //shape edge
-			for(unsigned int i=0; i<myMesh.triangles.size();++i)
-			{
-				if(myMesh.triangles[i].isFlat)
+	Mesh mesh;
+	mesh=myMesh[currentMesh];
+	for(unsigned int i=0; i<mesh.faces.size(); ++i)
+	{
+				glBegin(GL_POLYGON);
+				for(unsigned int j=0; j<mesh.faces[i].ver_id.size();++j)
 				{
-				glBegin(GL_TRIANGLES);
-				glNormal3f(myMesh.triangles[i].faceNormal.x,myMesh.triangles[i].faceNormal.y,myMesh.triangles[i].faceNormal.z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.z);
-				glEnd();
-
+				glNormal3f(mesh.vertices[mesh.faces[i].ver_id[j]].normal.x,mesh.vertices[mesh.faces[i].ver_id[j]].normal.y,mesh.vertices[mesh.faces[i].ver_id[j]].normal.z);
+				glVertex3f(mesh.vertices[mesh.faces[i].ver_id[j]].point.x,mesh.vertices[mesh.faces[i].ver_id[j]].point.y,mesh.vertices[mesh.faces[i].ver_id[j]].point.z);
 				}
-				else
-				{
-				glBegin(GL_TRIANGLES);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[2].x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[2].y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].normal[2].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[0]].point.z);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[2].x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[2].y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].normal[2].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[1]].point.z);
-				glNormal3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[2].x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[2].y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].normal[2].z);
-				glVertex3f(myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.x,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.y,myMesh.vertices[myMesh.triangles[i].ver_id[2]].point.z);
 				glEnd();
-				}
-			}
-			break;
-
 	}
+
 }
 
 void RenderScene(void)
@@ -609,16 +536,6 @@ void SpecialKeys(int key, int x, int y)
 	if(key == GLUT_KEY_RIGHT) {
 		camRotY -= kRotationStep;
 	}
-	if(key=='1')
-		mode=1;
-	if(key=='2')
-		mode=2;
-	if(key== '3')
-		mode=3;
-	if(key=='4')
-		mode=4;
-	if(key=='5')
-		mode=5;
 	if(key=='<')
 		currentMesh--;
 	if(key=='>')
@@ -753,8 +670,11 @@ int main(int argc, char **argv)
 	// screen, and you're done!
 	//
 
-	myMesh[0].loadFile(argv[1]);
+	Mesh mesh1;
+	mesh1.loadFile(argv[1]);
+	myMesh.push_back(mesh1);
 	setVertexNormal(myMesh[0]);
+	//myMesh[0].displayMesh();
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
