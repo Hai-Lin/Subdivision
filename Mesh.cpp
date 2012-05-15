@@ -59,12 +59,13 @@ void Face::displayFace()
 	cout<<"Face id: "<<id<<endl;
 	cout<<"Face vertices id: ";
 	for(int i=0; i<ver_id.size();++i)
-		cout<<i<<" : "<<ver_id[i]<<" ";
+		cout<<" "<<ver_id[i]<<" ";
 	cout<<endl;
+	cout<<"Edge id: "<<edge_id<<endl;
 
 	if(isNormal)
 	{
-		cout<<"Face's normal is:"<<endl;
+		cout<<"Face's normal is:";
 		faceNormal.display();
 	}
 	else
@@ -80,7 +81,7 @@ void Face::displayFace()
 void Vertex::displayVertex()
 {
 	cout<<"Vertex id: "<<id<<endl;
-	cout<<"Vertex edge id: "<<edge_id<<endl;
+	cout<<"edge id: "<<edge_id<<endl;
 	cout<<"Vertex point:";
 	point.display();
 	if(isNormal)
@@ -351,13 +352,13 @@ vector<Vertex> getLoopVertices(Mesh mesh)
 			}
 			else
 			{
-				int n=neighbor.size();
+				int n=neighbor.size()+1;
 				if(n==3)
 					beta=0.1875;
 				else
 					beta=3.0/(8.0*(float)n);
 				newPoint=(1-n*beta)*mesh.vertices[i].point;
-				for(unsigned int j=0; j<n;++j)
+				for(unsigned int j=0; j<n-1;++j)
 				{
 					Edge edge=mesh.edges[neighbor[j]];
 					Edge edge1=mesh.edges[edge.next_id];
@@ -435,17 +436,14 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 		Vertex newVertex1=getLoopEdgeVertex(mesh, currentEdge1.id);
 		Vertex newConerVertex1=newVertices[currentEdge1.vertex_id];
 		newVertex1.id=newVertices.size();
-		newVertices.push_back(newVertex1);
 		Edge currentEdge2=mesh.edges[currentEdge1.next_id];
 		Vertex newConerVertex2=newVertices[currentEdge2.vertex_id];
 		Vertex newVertex2=getLoopEdgeVertex(mesh, currentEdge2.id);
-		newVertex2.id=newVertices.size();
-		newVertices.push_back(newVertex2);
+		newVertex2.id=newVertices.size()+1;
 		Edge currentEdge3=mesh.edges[currentEdge2.next_id];
 		Vertex newConerVertex3=newVertices[currentEdge3.vertex_id];
 		Vertex newVertex3=getLoopEdgeVertex(mesh, currentEdge3.id);
-		newVertex3.id=newVertices.size();
-		newVertices.push_back(newVertex3);
+		newVertex3.id=newVertices.size()+2;
 
 		//construct middle triangles
 		Face newFace;
@@ -468,6 +466,12 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 		newEdge2.next_id=newEdge3.id;
 		newEdge3.next_id=newEdge1.id;
 		newFace.edge_id=newEdge1.id;
+		newVertex1.edge_id=newEdge2.id;
+		newVertex2.edge_id=newEdge3.id;
+		newVertex3.edge_id=newEdge1.id;
+		newVertices.push_back(newVertex1);
+		newVertices.push_back(newVertex2);
+		newVertices.push_back(newVertex3);
 		//construct side triangles
 		//1 face
 		Face conerFace1;

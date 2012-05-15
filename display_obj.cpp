@@ -400,6 +400,23 @@ void displayMesh()
 
 }
 
+void updateMesh()
+{
+	Mesh newMesh;
+	if(currentMesh==myMesh.size())
+	{
+		if(myMesh[currentMesh-1].type==0)
+		newMesh=getLoopSub(myMesh[currentMesh-1]);
+		else
+		{
+
+		}
+		setVertexNormal(newMesh);
+		newMesh.displayMesh();
+		myMesh.push_back(newMesh);
+		
+	}
+}
 void RenderScene(void)
 {
 
@@ -559,7 +576,11 @@ void SpecialKeys(int key, int x, int y)
 	if(key=='2')
 		mode=1;
 	if(key=='<')
+	{
+		if(currentMesh>=1)
 		currentMesh--;
+
+	}
 	if(key=='>')
 		currentMesh++;
 	if(key == 'z') {
@@ -587,6 +608,8 @@ void SpecialKeys(int key, int x, int y)
 			glShadeModel(GL_FLAT);
 		}
 	}
+	//update myMesh[]
+	updateMesh();
 
 	// Refresh the Window
 	glutPostRedisplay();
@@ -694,14 +717,8 @@ int main(int argc, char **argv)
 
 	Mesh mesh1;
 	mesh1.loadFile(argv[1]);
-	
 	myMesh.push_back(mesh1);
 	setVertexNormal(myMesh[0]);
-	myMesh[0]=getLoopSub(myMesh[0]);
-	setVertexNormal(myMesh[0]);
-	
-	
-
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(800, 600);
