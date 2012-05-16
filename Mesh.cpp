@@ -432,7 +432,6 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 	for(unsigned int i=0; i<mesh.faces.size();++i)
 	{
 		pushTime=0;
-		cout<<"i's face"<<i<<endl;
 		//get three edge vertices
 		Edge currentEdge1=mesh.edges[mesh.faces[i].edge_id];
 		Vertex newVertex1;
@@ -629,7 +628,7 @@ void Mesh::setFaceCentroid()
 		for(unsigned int j=0; j<faces[i].ver_id.size();++j)
 		{
 			float n=faces[i].ver_id.size();
-			faceCentroid=faceCentroid+n*vertices[faces[i].ver_id[j]].point;
+			faceCentroid=faceCentroid+(1/n)*vertices[faces[i].ver_id[j]].point;
 
 		}
 		faces[i].faceCentroid=faceCentroid;
@@ -677,8 +676,9 @@ Vector3D ccVertexPoint(Mesh mesh, int vertex_id)
 	}
 	else
 	{
-		result=((n-2)/n)*mesh.vertices[vertex_id].point;
-		float c=1/(n*n);
+		float d=(n-2.)/n;
+		result=d*mesh.vertices[vertex_id].point;
+		float c=1.0/(n*n);
 		for(unsigned int i=0; i<n;++i)
 		{
 			result=result+c*mesh.vertices[mesh.edges[neighbor[i]].vertex_id].point;
@@ -710,28 +710,37 @@ Vector3D ccEdgePoint(Mesh mesh, int edge_id)
 	return result;
 }
 
-Mesh getCCMesh(Mesh mesh)
+Mesh getCCSub(Mesh mesh)
 {
 	//first get vertices
 	mesh.setFaceCentroid();
 	vector<Vertex> newVertices;
 	vector<Face> newFaces;
 	vector<Edge> newEdges;
+	//face vertices
 	for(unsigned int i=0;i<mesh.faces.size();++i)
 	{
 		Vertex faceCentroid;
 		faceCentroid.point=mesh.faces[i].faceCentroid;
 		faceCentroid.id=newVertices.size();
+		faceCentroid.isBoundary=false;
 		newVertices.push_back(faceCentroid);
 	}
+	cout<<"get all face point"<<endl;
 	//vertices's vertex
 	for(unsigned int i=0;i<mesh.vertices.size();++i)
 	{
 		Vertex newVertex;
 		newVertex.id=newVertices.size();
 		newVertex.point=ccVertexPoint(mesh,i);
+		if(mesh.vertices[i].isBoundary)
+			newVertex.isBoundary=true;
+		else
+			newVertex.isBoundary=false;
 		newVertices.push_back(newVertex);
 	}
+	cout<<"get all vertices's point"<<endl;
+	//edge's vertices
 	for(unsigned int i=0; i<mesh.edges.size();++i)
 	{
 		Vertex edgeV;
@@ -741,11 +750,71 @@ Mesh getCCMesh(Mesh mesh)
 			edgeV.id=newVertices.size();
 			mesh.edges[i].nextCCVertex=edgeV.id;
 			if(mesh.edges[i].pair_id!=-1)
+			{
 				mesh.edges[mesh.edges[i].pair_id].nextCCVertex=edgeV.id;
+				edgeV.isBoundary=false;
+
+			}
+			else
+				edgeV.isBoundary=true;
 			newVertices.push_back(edgeV);
 		}
 	}
+	cout<<"get all edges' point"<<endl;
+	//construct new face
+	for(unsigned int i=0; i<mesh.faces.size();++i)
+	{
+		Edge edge=mesh.edges[mesh.faces[i].edge_id];
+		for(unsigned int j=0; j<mesh.faces[i].ver_id.size();++j)
+		{
+			Face newFace(newFaces.size());
+			Edge newEdge1, newEdge2, newEdge3, newEdge4;
+			newFace.ver_id.push_back(i); //face centroid
+			newEdge1.vertex_id=i;
+			newEdge1.face_id=newFace.id;
+			newEdge1.id=newEdges.size();
+			
+			newFace.ver_id.push_back(edge.nextCCVertex);  //first edge
+			newEdge2.vertex_id=edge.nextCCVertex;
+			newEdge2.face_id=newFace.id;
+			newEdge2.id=newEdges.size()+1;
+			
+			newFace.ver_id.push_back(mesh.faces.size()+edge.vertex_id);
+			newEdge3.vertex_id=mesh.faces.size()+edge.vertex_id;
+			newEdge3.face_id=newFace.id;
+			newEdge3.id=newEdges.size()+2;
 
+			edge=mesh.edges[edge.next_id];
+			newFace.ver_id.push_back(edge.nextCCVertex);  //first edge
+			newEdge4.vertex_id=edge.nextCCVertex;
+			newEdge4.face_id=newFace.id;
+			newEdge4.id=newEdges.size()+3;
+			
+			newEdge1.next_id=newEdge2.id;
+			newEdge2.next_id=newEdge3.id;
+			newEdge3.next_id=newEdge4.id;
+			newEdge4.next_id=newEdge1.id;
+			newEdges.push_back(newEdge1);
+			newEdges.push_back(newEdge2);
+			newEdges.push_back(newEdge3);
+			newEdges.push_back(newEdge4);
+			newVertices[i].edge_id=newEdge2.id;
+			newVertices[newEdge2.vertex_id].edge_id=newEdge3.id;
+			newVertices[newEdge3.vertex_id].edge_id=newEdge4.id;
+			newVertices[newEdge4.vertex_id].edge_id=newEdge1.id;
+
+			newFace.edge_id=newEdge1.id;
+			newFace.isNormal=false;
+			newFaces.push_back(newFace);
+		}
+	}
+	cout<<"done construct new faces and edges"<<endl;
+	Mesh newMesh;
+	newMesh.type=1;
+	newMesh.vertices=newVertices;
+	newMesh.edges=newEdges;
+	newMesh.faces=newFaces;
+	return newMesh;
 }
 /*  
 	int main(int argc, char* argv[])

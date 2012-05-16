@@ -89,7 +89,7 @@ class Mesh
 		vector<Face> faces;
 		vector<Vertex> vertices;
 		vector<Edge> edges;
-		int type;  // 0 is Loop subdivision, 1 is 
+		int type;  // 0 is Loop subdivision, 1 is Catmul-Clark subdivision 
 		Mesh() {}
 		void loadFile(char *fname);
 		void displayMesh();
@@ -106,6 +106,6 @@ void setPairEdge(Mesh &);
 void setVertexNormal(Mesh &);
 void StringSplit(string str, string separator, vector<string>* results);
 Mesh getLoopSub(Mesh );   //get the next level of Loop subdivision
-Mesh getCCSub(Mesh );  //get next level of cc subdivision
+Mesh getCCSub(Mesh );  //get next level of Catumul-Clark  subdivision
 Vector3D ccEdgePoint(Mesh, int edge_id);
 Vector3D ccVertexPoint(Mesh, int vertex_id);

@@ -372,31 +372,31 @@ void displayMesh()
 	switch (mode)
 	{
 		case 0:
-	for(unsigned int i=0; i<mesh.faces.size(); ++i)
-	{
+			for(unsigned int i=0; i<mesh.faces.size(); ++i)
+			{
 				glBegin(GL_POLYGON);
-			glNormal3f(mesh.faces[i].faceNormal.x,mesh.faces[i].faceNormal.y,mesh.faces[i].faceNormal.z);
+				glNormal3f(mesh.faces[i].faceNormal.x,mesh.faces[i].faceNormal.y,mesh.faces[i].faceNormal.z);
 				for(unsigned int j=0; j<mesh.faces[i].ver_id.size();++j)
 				{
-				glVertex3f(mesh.vertices[mesh.faces[i].ver_id[j]].point.x,mesh.vertices[mesh.faces[i].ver_id[j]].point.y,mesh.vertices[mesh.faces[i].ver_id[j]].point.z);
+					glVertex3f(mesh.vertices[mesh.faces[i].ver_id[j]].point.x,mesh.vertices[mesh.faces[i].ver_id[j]].point.y,mesh.vertices[mesh.faces[i].ver_id[j]].point.z);
 				}
 				glEnd();
-	}
-	break;
+			}
+			break;
 		case 1:
-	for(unsigned int i=0; i<mesh.faces.size(); ++i)
-	{
+			for(unsigned int i=0; i<mesh.faces.size(); ++i)
+			{
 				glBegin(GL_POLYGON);
 				for(unsigned int j=0; j<mesh.faces[i].ver_id.size();++j)
 				{
-			glNormal3f(mesh.vertices[mesh.faces[i].ver_id[j]].normal.x,mesh.vertices[mesh.faces[i].ver_id[j]].normal.y,mesh.vertices[mesh.faces[i].ver_id[j]].normal.z);
-				glVertex3f(mesh.vertices[mesh.faces[i].ver_id[j]].point.x,mesh.vertices[mesh.faces[i].ver_id[j]].point.y,mesh.vertices[mesh.faces[i].ver_id[j]].point.z);
+					glNormal3f(mesh.vertices[mesh.faces[i].ver_id[j]].normal.x,mesh.vertices[mesh.faces[i].ver_id[j]].normal.y,mesh.vertices[mesh.faces[i].ver_id[j]].normal.z);
+					glVertex3f(mesh.vertices[mesh.faces[i].ver_id[j]].point.x,mesh.vertices[mesh.faces[i].ver_id[j]].point.y,mesh.vertices[mesh.faces[i].ver_id[j]].point.z);
 				}
 				glEnd();
-	}
+			}
 
 	}
-	
+
 
 }
 
@@ -406,15 +406,16 @@ void updateMesh()
 	if(currentMesh==myMesh.size())
 	{
 		if(myMesh[currentMesh-1].type==0)
-		newMesh=getLoopSub(myMesh[currentMesh-1]);
+			newMesh=getLoopSub(myMesh[currentMesh-1]);
 		else
 		{
+			newMesh=getCCSub(myMesh[currentMesh-1]);
 
 		}
 		setVertexNormal(newMesh);
 		newMesh.displayMesh();
 		myMesh.push_back(newMesh);
-		
+
 	}
 }
 void RenderScene(void)
@@ -578,7 +579,7 @@ void SpecialKeys(int key, int x, int y)
 	if(key=='<')
 	{
 		if(currentMesh>=1)
-		currentMesh--;
+			currentMesh--;
 
 	}
 	if(key=='>')

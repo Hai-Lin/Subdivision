@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS =   -Wall
+CFLAGS =  -Wall
 PROG =subd_hl2656 
 SRCS=display_obj.cpp trackball.cpp Vector3D.cpp Mesh.cpp 
 
