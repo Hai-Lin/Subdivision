@@ -660,7 +660,11 @@ Vector3D ccVertexPoint(Mesh mesh, int vertex_id)
 				if(mesh.edges[neighbor[i]].pair_id==-1)
 					result=result+0.125*mesh.vertices[mesh.edges[neighbor[i]].vertex_id].point;
 				if(previous.pair_id==-1)
+				{
+					previous=mesh.edges[mesh.previousEdge(previous.id)];
 					result=result+0.125*mesh.vertices[previous.vertex_id].point;
+
+				}
 
 			}
 
@@ -704,6 +708,44 @@ Vector3D ccEdgePoint(Mesh mesh, int edge_id)
 		result=result+0.25*mesh.faces[mesh.edges[mesh.edges[edge_id].pair_id].face_id].faceCentroid;
 	}
 	return result;
+}
+
+Mesh getCCMesh(Mesh mesh)
+{
+	//first get vertices
+	mesh.setFaceCentroid();
+	vector<Vertex> newVertices;
+	vector<Face> newFaces;
+	vector<Edge> newEdges;
+	for(unsigned int i=0;i<mesh.faces.size();++i)
+	{
+		Vertex faceCentroid;
+		faceCentroid.point=mesh.faces[i].faceCentroid;
+		faceCentroid.id=newVertices.size();
+		newVertices.push_back(faceCentroid);
+	}
+	//vertices's vertex
+	for(unsigned int i=0;i<mesh.vertices.size();++i)
+	{
+		Vertex newVertex;
+		newVertex.id=newVertices.size();
+		newVertex.point=ccVertexPoint(mesh,i);
+		newVertices.push_back(newVertex);
+	}
+	for(unsigned int i=0; i<mesh.edges.size();++i)
+	{
+		Vertex edgeV;
+		if(mesh.edges[i].nextCCVertex==-1)
+		{
+			edgeV.point=ccEdgePoint(mesh, i);
+			edgeV.id=newVertices.size();
+			mesh.edges[i].nextCCVertex=edgeV.id;
+			if(mesh.edges[i].pair_id!=-1)
+				mesh.edges[mesh.edges[i].pair_id].nextCCVertex=edgeV.id;
+			newVertices.push_back(edgeV);
+		}
+	}
+
 }
 /*  
 	int main(int argc, char* argv[])
