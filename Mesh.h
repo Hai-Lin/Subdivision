@@ -51,12 +51,14 @@ class Face{
 		int id, edge_id;
 		Edge faceEdge; //andy incident h-edge
 		Vector3D faceNormal;
+		Vector3D faceCentroid;
 		bool isNormal;
 		Face( int d=0)
 		{
 			id=d;
 		}
 		void displayFace();
+		void setFaceCentroid();
 };
 
 class Vertex
@@ -94,6 +96,7 @@ class Mesh
 		int previousEdge(int edge);
 		vector<int> edgesOfVertex(int vertex);
 		vector<int> edgesOfFace(int face);
+		void setFaceCentroid();
 };
 
 Vertex getLoopEdgeVertex(Mesh , int edge_id);
@@ -103,3 +106,5 @@ void setVertexNormal(Mesh &);
 void StringSplit(string str, string separator, vector<string>* results);
 Mesh getLoopSub(Mesh );   //get the next level of Loop subdivision
 Mesh getCCSub(Mesh );  //get next level of cc subdivision
+Vector3D ccEdgePoint(Mesh, int edge_id);
+Vector3D ccVertexPoint(Mesh, int vertex_id);

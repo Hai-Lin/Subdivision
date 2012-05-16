@@ -451,7 +451,7 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 			newVertex1=newVertices[currentEdge1.nextEdgeVertex];
 		}
 		Edge currentEdge2=mesh.edges[currentEdge1.next_id];
-	  	if(currentEdge2.nextEdgeVertex==-1)
+		if(currentEdge2.nextEdgeVertex==-1)
 		{
 			newVertex2=getLoopEdgeVertex(mesh, currentEdge2.id);
 			newVertex2.id=newVertices.size()+pushTime;
@@ -464,7 +464,7 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 			newVertex2=newVertices[currentEdge2.nextEdgeVertex]; 
 		}
 		Edge currentEdge3=mesh.edges[currentEdge2.next_id];
-	  	if(currentEdge3.nextEdgeVertex==-1)
+		if(currentEdge3.nextEdgeVertex==-1)
 		{
 			newVertex3=getLoopEdgeVertex(mesh, currentEdge3.id);
 			newVertex3.id=newVertices.size()+pushTime;
@@ -517,7 +517,7 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 			newVertex3.edge_id=newEdge1.id;
 			newVertices.push_back(newVertex3);
 
-     	}
+		}
 		//construct side triangles
 		//1 face
 		Face conerFace1;
@@ -618,6 +618,92 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 	newMesh.edges=newEdges;
 	newMesh.type=0;
 	return newMesh;
+}
+
+
+void Mesh::setFaceCentroid()
+{
+	for(unsigned int i=0; i<faces.size();++i)
+	{
+		Vector3D faceCentroid;
+		for(unsigned int j=0; j<faces[i].ver_id.size();++j)
+		{
+			float n=faces[i].ver_id.size();
+			faceCentroid=faceCentroid+n*vertices[faces[i].ver_id[j]].point;
+
+		}
+		faces[i].faceCentroid=faceCentroid;
+	}
+}
+
+Vector3D ccVertexPoint(Mesh mesh, int vertex_id)
+{
+	Vector3D result;
+	vector<int> neighbor=mesh.edgesOfVertex(vertex_id);
+	int n=neighbor.size();
+	if(mesh.vertices[vertex_id].isBoundary)
+	{
+		int boundary=0;
+		for(unsigned int i=0; i<n;++i)
+		{
+			if(mesh.edges[neighbor[i]].pair_id==-1)
+				boundary++;
+			if(mesh.edges[mesh.previousEdge(neighbor[i])].pair_id==-1)
+				boundary++;
+		}
+		if(boundary==2)
+		{
+			result=0.75*mesh.vertices[vertex_id].point;
+			for(unsigned int i=0; i<n;++i)
+			{
+				Edge previous=mesh.edges[mesh.previousEdge(neighbor[i])];
+				if(mesh.edges[neighbor[i]].pair_id==-1)
+					result=result+0.125*mesh.vertices[mesh.edges[neighbor[i]].vertex_id].point;
+				if(previous.pair_id==-1)
+					result=result+0.125*mesh.vertices[previous.vertex_id].point;
+
+			}
+
+		}
+		if(boundary>2)
+			result=mesh.vertices[vertex_id].point;
+
+
+
+	}
+	else
+	{
+		result=((n-2)/n)*mesh.vertices[vertex_id].point;
+		float c=1/(n*n);
+		for(unsigned int i=0; i<n;++i)
+		{
+			result=result+c*mesh.vertices[mesh.edges[neighbor[i]].vertex_id].point;
+			result=result+c*mesh.faces[mesh.edges[neighbor[i]].face_id].faceCentroid;
+		}
+	}
+	return result;
+
+}
+
+
+Vector3D ccEdgePoint(Mesh mesh, int edge_id)
+{
+	Vector3D result;
+	Edge edge=mesh.edges[edge_id];
+	if(edge.pair_id==-1)
+	{
+		result=result+0.5*mesh.vertices[edge.vertex_id].point;
+		Edge previous=mesh.edges[mesh.previousEdge(edge_id)];
+		result=result+0.5*mesh.vertices[previous.vertex_id].point;
+	}
+	else
+	{
+		result=result+0.25*mesh.vertices[edge.vertex_id].point;
+		result=result+0.25*mesh.vertices[mesh.edges[edge.pair_id].vertex_id].point;
+		result=result+0.25*mesh.faces[mesh.edges[edge_id].face_id].faceCentroid;
+		result=result+0.25*mesh.faces[mesh.edges[mesh.edges[edge_id].pair_id].face_id].faceCentroid;
+	}
+	return result;
 }
 /*  
 	int main(int argc, char* argv[])
