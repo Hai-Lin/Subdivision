@@ -726,7 +726,6 @@ Mesh getCCSub(Mesh mesh)
 		faceCentroid.isBoundary=false;
 		newVertices.push_back(faceCentroid);
 	}
-	cout<<"get all face point"<<endl;
 	//vertices's vertex
 	for(unsigned int i=0;i<mesh.vertices.size();++i)
 	{
@@ -739,7 +738,6 @@ Mesh getCCSub(Mesh mesh)
 			newVertex.isBoundary=false;
 		newVertices.push_back(newVertex);
 	}
-	cout<<"get all vertices's point"<<endl;
 	//edge's vertices
 	for(unsigned int i=0; i<mesh.edges.size();++i)
 	{
@@ -760,7 +758,6 @@ Mesh getCCSub(Mesh mesh)
 			newVertices.push_back(edgeV);
 		}
 	}
-	cout<<"get all edges' point"<<endl;
 	//construct new face
 	for(unsigned int i=0; i<mesh.faces.size();++i)
 	{
@@ -808,7 +805,6 @@ Mesh getCCSub(Mesh mesh)
 			newFaces.push_back(newFace);
 		}
 	}
-	cout<<"done construct new faces and edges"<<endl;
 	Mesh newMesh;
 	newMesh.type=1;
 	newMesh.vertices=newVertices;

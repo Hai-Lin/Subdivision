@@ -372,9 +372,20 @@ void displayMesh()
 	switch (mode)
 	{
 		case 0:
+
+
 			for(unsigned int i=0; i<mesh.faces.size(); ++i)
 			{
-				glBegin(GL_POLYGON);
+				if(mesh.type==0)
+					glBegin(GL_TRIANGLES);
+				else
+				{
+					if(currentMesh==0)
+						glBegin(GL_POLYGON);
+					else
+						glBegin(GL_QUADS);
+
+				}
 				glNormal3f(mesh.faces[i].faceNormal.x,mesh.faces[i].faceNormal.y,mesh.faces[i].faceNormal.z);
 				for(unsigned int j=0; j<mesh.faces[i].ver_id.size();++j)
 				{
@@ -386,7 +397,16 @@ void displayMesh()
 		case 1:
 			for(unsigned int i=0; i<mesh.faces.size(); ++i)
 			{
-				glBegin(GL_POLYGON);
+				if(mesh.type==0)
+					glBegin(GL_TRIANGLES);
+				else
+				{
+					if(currentMesh==0)
+						glBegin(GL_POLYGON);
+					else
+						glBegin(GL_QUADS);
+
+				}
 				for(unsigned int j=0; j<mesh.faces[i].ver_id.size();++j)
 				{
 					glNormal3f(mesh.vertices[mesh.faces[i].ver_id[j]].normal.x,mesh.vertices[mesh.faces[i].ver_id[j]].normal.y,mesh.vertices[mesh.faces[i].ver_id[j]].normal.z);
@@ -413,7 +433,6 @@ void updateMesh()
 
 		}
 		setVertexNormal(newMesh);
-		newMesh.displayMesh();
 		myMesh.push_back(newMesh);
 
 	}
