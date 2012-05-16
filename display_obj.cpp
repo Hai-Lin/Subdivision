@@ -423,7 +423,7 @@ void displayMesh()
 void updateMesh()
 {
 	Mesh newMesh;
-	if(currentMesh==myMesh.size())
+	if(currentMesh==(int)myMesh.size())
 	{
 		if(myMesh[currentMesh-1].type==0)
 			newMesh=getLoopSub(myMesh[currentMesh-1]);

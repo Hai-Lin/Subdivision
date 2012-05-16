@@ -1,5 +1,4 @@
-Computational Aspects of Geometric Design hw3-----impelement subdivision(Loop and Catmull-Clark)
-Hai Lin ___uni: hl2656
+Impelement subdivision(Loop and Catmull-Clark)
 Purpose: implement subdivision surfaces of two types: both Loop and Catmull-Clark Subds for display in openGL.
 
 How to run:
