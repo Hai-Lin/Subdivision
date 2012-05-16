@@ -32,11 +32,12 @@ class Mesh;
 class Edge
 {
 	public:
-		int id, pair_id, next_id, vertex_id, face_id;
+		int id, pair_id, next_id, vertex_id, face_id, nextEdgeVertex;
 		Edge(int _id=-1,  int vertex=-1, int face=-1, int pair=-1 )
 		{
 			id=_id;
 			vertex_id=vertex;
+			nextEdgeVertex=-1;
 			face_id=face;
 			pair_id=pair;
 		}

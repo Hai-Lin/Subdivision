@@ -38,7 +38,7 @@ void Mesh::setFaceNormal()
 	for(unsigned int i=0; i<faces.size();++i)
 	{
 		edge1=vertices[faces[i].ver_id[1]].point-vertices[faces[i].ver_id[0]].point;
-		edge2=vertices[faces[i].ver_id[2]].point-vertices[faces[i].ver_id[1]].point;
+		edge2=vertices[faces[i].ver_id[2]].point-vertices[faces[i].ver_id[0]].point;
 		normal=edge1*edge2;
 		faces[i].faceNormal=normalize(normal);
 		faces[i].isNormal=true;
@@ -428,22 +428,57 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 	vector<Vertex> newVertices=getLoopVertices(mesh);
 	vector<Face> newFaces;
 	vector<Edge> newEdges;
+	int pushTime;
 	for(unsigned int i=0; i<mesh.faces.size();++i)
 	{
+		pushTime=0;
 		cout<<"i's face"<<i<<endl;
 		//get three edge vertices
 		Edge currentEdge1=mesh.edges[mesh.faces[i].edge_id];
-		Vertex newVertex1=getLoopEdgeVertex(mesh, currentEdge1.id);
-		Vertex newConerVertex1=newVertices[currentEdge1.vertex_id];
-		newVertex1.id=newVertices.size();
+		Vertex newVertex1;
+		Vertex newVertex2;
+		Vertex newVertex3;
+		if(currentEdge1.nextEdgeVertex==-1)
+		{
+			newVertex1=getLoopEdgeVertex(mesh, currentEdge1.id);
+			newVertex1.id=newVertices.size();
+			pushTime++;
+			if(currentEdge1.pair_id!=-1)
+				mesh.edges[currentEdge1.pair_id].nextEdgeVertex=newVertex1.id;
+		}
+		else
+		{
+			newVertex1=newVertices[currentEdge1.nextEdgeVertex];
+		}
 		Edge currentEdge2=mesh.edges[currentEdge1.next_id];
-		Vertex newConerVertex2=newVertices[currentEdge2.vertex_id];
-		Vertex newVertex2=getLoopEdgeVertex(mesh, currentEdge2.id);
-		newVertex2.id=newVertices.size()+1;
+	  	if(currentEdge2.nextEdgeVertex==-1)
+		{
+			newVertex2=getLoopEdgeVertex(mesh, currentEdge2.id);
+			newVertex2.id=newVertices.size()+pushTime;
+			pushTime++;
+			if(currentEdge2.pair_id!=-1)
+				mesh.edges[currentEdge2.pair_id].nextEdgeVertex=newVertex2.id;
+		}
+		else
+		{
+			newVertex2=newVertices[currentEdge2.nextEdgeVertex]; 
+		}
 		Edge currentEdge3=mesh.edges[currentEdge2.next_id];
+	  	if(currentEdge3.nextEdgeVertex==-1)
+		{
+			newVertex3=getLoopEdgeVertex(mesh, currentEdge3.id);
+			newVertex3.id=newVertices.size()+pushTime;
+			if(currentEdge3.pair_id!=-1)
+				mesh.edges[currentEdge3.pair_id].nextEdgeVertex=newVertex3.id;
+
+		}
+		else
+		{
+			newVertex3=newVertices[currentEdge3.nextEdgeVertex]; 
+		}
+		Vertex newConerVertex1=newVertices[currentEdge1.vertex_id];
+		Vertex newConerVertex2=newVertices[currentEdge2.vertex_id];
 		Vertex newConerVertex3=newVertices[currentEdge3.vertex_id];
-		Vertex newVertex3=getLoopEdgeVertex(mesh, currentEdge3.id);
-		newVertex3.id=newVertices.size()+2;
 
 		//construct middle triangles
 		Face newFace;
@@ -466,12 +501,23 @@ Mesh getLoopSub(Mesh mesh)   //get the next level of Loop subdivision
 		newEdge2.next_id=newEdge3.id;
 		newEdge3.next_id=newEdge1.id;
 		newFace.edge_id=newEdge1.id;
-		newVertex1.edge_id=newEdge2.id;
-		newVertex2.edge_id=newEdge3.id;
-		newVertex3.edge_id=newEdge1.id;
-		newVertices.push_back(newVertex1);
-		newVertices.push_back(newVertex2);
-		newVertices.push_back(newVertex3);
+		if(currentEdge1.nextEdgeVertex==-1)
+		{
+			newVertex1.edge_id=newEdge2.id;
+			newVertices.push_back(newVertex1);
+		}
+		if(currentEdge2.nextEdgeVertex==-1)
+		{
+			newVertex2.edge_id=newEdge3.id;
+			newVertices.push_back(newVertex2);
+
+		}
+		if(currentEdge3.nextEdgeVertex==-1)
+		{
+			newVertex3.edge_id=newEdge1.id;
+			newVertices.push_back(newVertex3);
+
+     	}
 		//construct side triangles
 		//1 face
 		Face conerFace1;
